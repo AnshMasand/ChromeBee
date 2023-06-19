@@ -1,0 +1,27 @@
+{
+    "manifest_version": 2,
+    "name": "Spelling Practice",
+    "version": "1.0",
+    "description": "A browser extension to help improve spelling.",
+    "permissions": ["storage", "activeTab"],
+    "background": {
+      "scripts": ["background.js"],
+      "persistent": false
+    },
+    "content_scripts": [
+      {
+        "matches": ["<all_urls>"],
+        "js": ["content.js"]
+      }
+    ],
+    "options_page": "options.html",
+    "browser_action": {
+      "default_popup": "options.html",
+      "default_icon": {
+        "48": "icon48.png"
+      }
+    },
+    "icons": {
+      "48": "icon48.png"
+    }
+  }
