@@ -1,33 +1,30 @@
-// We can use an open-source library like Typo.js (https://github.com/cfinke/Typo.js) for spell checking
-
-const typo = new Typo("en_US");
-
-function checkSpelling(text) {
-  const words = text.split(/\s+/);
-  const misspelledWords = [];
-
-  for (const word of words) {
-    if (!typo.check(word)) {
-      const suggestions = typo.suggest(word);
-      if (suggestions.length > 0) {
-        misspelledWords.push({ incorrect: word, correct: suggestions[0] });
-      }
-    }
-  }
-
-  return misspelledWords;
-}
-
-document.addEventListener("input", (event) => {
-  const target = event.target;
-  if (target.tagName === "TEXTAREA" || (target.tagName === "INPUT" && target.type === "text")) {
-    const misspelledWords = checkSpelling(target.value);
-    if (misspelledWords.length > 0) {
-      chrome.storage.local.get("misspelledWords", (data) => {
-        const storedWords = data.misspelledWords || [];
-        const updatedWords = storedWords.concat(misspelledWords);
-        chrome.storage.local.set({ misspelledWords: updatedWords });
+// Send a message to the background script to check the spelling of a word
+function checkSpelling(word) {
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage({ action: 'checkSpelling', word: word }, (response) => {
+        resolve(response.correctedWord);
       });
-    }
+    });
   }
-});
+  
+  // Correct the text in an input field or text area
+  async function correctText(element) {
+    const words = element.value.split(' ');
+    const correctedWords = [];
+  
+    for (const word of words) {
+      const correctedWord = await checkSpelling(word);
+      correctedWords.push(correctedWord || word);
+    }
+  
+    element.value = correctedWords.join(' ');
+  }
+  
+  // Listen for input events on input fields and text areas
+  document.addEventListener('input', (event) => {
+    const target = event.target;
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+      correctText(target);
+    }
+  });
+  
